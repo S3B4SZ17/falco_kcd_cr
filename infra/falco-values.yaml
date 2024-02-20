@@ -34,10 +34,10 @@ falcoctl:
         # -- Do not resolve the depenencies for artifacts. By default is true, but for our use case we disable it.
         resolveDeps: true
         # -- List of artifacts to be installed by the falcoctl init container.
-        refs: [falco-rules:0, k8saudit-rules:0.5, cloudtrail-rules:0.8]
+        refs: [falco-rules:3, k8saudit-rules:0.7, cloudtrail-rules:0.10]
       follow:
         # -- List of artifacts to be followed by the falcoctl sidecar container.
-        refs: [falco-rules:0, k8saudit-rules:0.5, cloudtrail-rules:0.8]
+        refs: [falco-rules:3, k8saudit-rules:0.7, cloudtrail-rules:0.10]
 
 services:
   - name: k8saudit-webhook
