@@ -1,0 +1,16 @@
+.terraform
+kubectl
+kubeconfig
+kubeconfig.*
+secret.tfvars
+secrets.tfvars
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfstate.*.backup
+*.key
+terraform.tfvars
+terraform.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+**/.DS_Store
+*.out
