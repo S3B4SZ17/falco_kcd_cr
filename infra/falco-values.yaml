@@ -36,10 +36,10 @@ falcoctl:
         # -- Do not resolve the depenencies for artifacts. By default is true, but for our use case we disable it.
         resolveDeps: true
         # -- List of artifacts to be installed by the falcoctl init container.
-        refs: [falco-rules:3, k8saudit-rules:0.7, cloudtrail-rules:0.10]
+        refs: [falco-rules:3, k8saudit-rules:0.7, cloudtrail-rules:0.9, falco-sandbox-rules:3]
       follow:
         # -- List of artifacts to be followed by the falcoctl sidecar container.
-        refs: [falco-rules:3, k8saudit-rules:0.7, cloudtrail-rules:0.10]
+        refs: [falco-rules:3, k8saudit-rules:0.7, cloudtrail-rules:0.9, falco-sandbox-rules:3]
 
 services:
   - name: k8saudit-webhook
@@ -53,6 +53,8 @@ falco:
   rules_file:
     - /etc/falco/falco_rules.yaml
     - /etc/falco/k8s_audit_rules.yaml
+    - /etc/falco/aws_cloudtrail_rules.yaml
+    - /etc/falco/falco_sandbox_rules.yaml
     - /etc/falco/rules.d
   plugins:
     - name: k8saudit
@@ -67,8 +69,8 @@ falco:
       init_config: ""
     - name: cloudtrail
       library_path: libcloudtrail.so
-      init_config: ""
-      open_params: "s3://falco-sec-"
+      init_config: '{"sqsDelete": true}'
+      open_params: "sqs://XXXXX/falco-sec"
   load_plugins: [k8saudit, cloudtrail, json]
   json_output: true
   json_include_output_property: true
@@ -93,14 +95,14 @@ falco:
 healthChecks:
   livenessProbe:
     # -- Tells the kubelet that it should wait X seconds before performing the first probe.
-    initialDelaySeconds: 90
+    initialDelaySeconds: 30
     # -- Number of seconds after which the probe times out.
     timeoutSeconds: 10
     # -- Specifies that the kubelet should perform the check every x seconds.
     periodSeconds: 20
   readinessProbe:
     # -- Tells the kubelet that it should wait X seconds before performing the first probe.
-    initialDelaySeconds: 90
+    initialDelaySeconds: 30
     # -- Number of seconds after which the probe times out.
     timeoutSeconds: 10
     # -- Specifies that the kubelet should perform the check every x seconds.
@@ -113,6 +115,10 @@ falcosidekick:
   webui:
     enabled: true
     replicaCount: 1
+    service:
+      # -- The web UI service type
+      type: NodePort
+      nodePort: 30282
   replicaCount: 1
 
 extra:

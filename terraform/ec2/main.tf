@@ -93,8 +93,8 @@ resource "aws_security_group" "ssh_access" {
   }
 
   ingress {
-    from_port = 2802
-    to_port   = 2802
+    from_port = 30282
+    to_port   = 30282
     protocol  = "tcp"
     description = "Falco sidekick UI"
     cidr_blocks = [
