@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Instalacion de docker y minikube
-yum install -y docker git helm
+yum install -y docker git
 systemctl start docker
 usermod -aG docker ec2-user
 chmod 666 /var/run/docker.sock
