@@ -3,6 +3,8 @@
 driver:
   enabled: true
   kind: modern_ebpf
+  modernEbpf:
+    bufSizePreset: 4
 
 # Enable the collectors used to enrich the events with metadata.
 # Check the values.yaml file for fine-grained options.
@@ -75,12 +77,43 @@ falco:
     enabled: true
     url: "http://falco-falcosidekick.falco:2801"
 
+  metrics:
+    enabled: true
+    interval: 15m
+    output_rule: true
+    # output_file: /tmp/falco_stats.jsonl
+    resource_utilization_enabled: true
+    state_counters_enabled: true
+    kernel_event_counters_enabled: true
+    libbpf_stats_enabled: true
+    convert_memory_to_mb: true
+    include_empty_values: false
+
+# -- Parameters used
+healthChecks:
+  livenessProbe:
+    # -- Tells the kubelet that it should wait X seconds before performing the first probe.
+    initialDelaySeconds: 90
+    # -- Number of seconds after which the probe times out.
+    timeoutSeconds: 10
+    # -- Specifies that the kubelet should perform the check every x seconds.
+    periodSeconds: 20
+  readinessProbe:
+    # -- Tells the kubelet that it should wait X seconds before performing the first probe.
+    initialDelaySeconds: 90
+    # -- Number of seconds after which the probe times out.
+    timeoutSeconds: 10
+    # -- Specifies that the kubelet should perform the check every x seconds.
+    periodSeconds: 20
+
 tty: true
 
 falcosidekick:
-  enabled: true
+  enabled: false
   webui:
     enabled: true
+    replicaCount: 1
+  replicaCount: 1
 
 extra:
   env:

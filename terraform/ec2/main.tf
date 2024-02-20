@@ -14,7 +14,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_instance" "ec2_instance" {
   ami                         = data.aws_ami.amazon-linux.id
-  instance_type               = "t2.medium"
+  instance_type               = "c5.xlarge"
   vpc_security_group_ids      = [module.vpc.default_security_group_id, aws_security_group.ssh_access.id]
   subnet_id                   = module.vpc.public_subnets[0]
   associate_public_ip_address = true
@@ -87,6 +87,16 @@ resource "aws_security_group" "ssh_access" {
     to_port   = 80
     protocol  = "tcp"
     description = "HTTP access"
+    cidr_blocks = [
+      "0.0.0.0/0",
+    ]
+  }
+
+  ingress {
+    from_port = 2802
+    to_port   = 2802
+    protocol  = "tcp"
+    description = "Falco sidekick UI"
     cidr_blocks = [
       "0.0.0.0/0",
     ]

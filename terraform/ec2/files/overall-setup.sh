@@ -10,4 +10,3 @@ curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-
 install minikube-linux-amd64 /usr/local/bin/minikube
 
 echo "export PATH=$PATH:/usr/local/bin/" >> ~/.bashrc
-echo "alias k='minikube kubectl --'" >> ~/.bashrc
