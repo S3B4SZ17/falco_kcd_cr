@@ -36,10 +36,10 @@ falcoctl:
         # -- Do not resolve the depenencies for artifacts. By default is true, but for our use case we disable it.
         resolveDeps: true
         # -- List of artifacts to be installed by the falcoctl init container.
-        refs: [falco-rules:3, k8saudit-rules:0.7, cloudtrail-rules:0.9, falco-sandbox-rules:3]
+        refs: [falco-rules:3, k8saudit-rules:0.7, cloudtrail-rules:0.9, falco-sandbox-rules:3, github-rules:0.7]
       follow:
         # -- List of artifacts to be followed by the falcoctl sidecar container.
-        refs: [falco-rules:3, k8saudit-rules:0.7, cloudtrail-rules:0.9, falco-sandbox-rules:3]
+        refs: [falco-rules:3, k8saudit-rules:0.7, cloudtrail-rules:0.9, falco-sandbox-rules:3, github-rules:0.7]
 
 services:
   - name: k8saudit-webhook
@@ -48,6 +48,12 @@ services:
       - port: 9765 # See plugin open_params
         nodePort: 30007
         protocol: TCP
+  - name: github-webhook
+    type: NodePort
+    ports:
+      - port: 80 # See plugin open_params
+        nodePort: 30009
+        protocol: TCP
 
 falco:
   rules_file:
@@ -55,6 +61,7 @@ falco:
     - /etc/falco/k8s_audit_rules.yaml
     - /etc/falco/aws_cloudtrail_rules.yaml
     - /etc/falco/falco_sandbox_rules.yaml
+    - /etc/falco/github.yaml
     - /etc/falco/rules.d
   plugins:
     - name: k8saudit
@@ -70,8 +77,12 @@ falco:
     - name: cloudtrail
       library_path: libcloudtrail.so
       init_config: '{"sqsDelete": true}'
-      open_params: "sqs://XXXXX/falco-sec"
-  load_plugins: [k8saudit, cloudtrail, json]
+      open_params: "sqs://falco-sec"
+    - name: github
+      library_path: libgithub.so
+      init_config: '{"websocketServerURL" :"http://34.218.209.85/webhook", "useHTTPs":false}'
+      open_params: 'S3B4SZ17/falco_kcd_cr'
+  load_plugins: [k8saudit, cloudtrail, json, github]
   json_output: true
   json_include_output_property: true
   json_include_tags_property: true
@@ -111,7 +122,7 @@ healthChecks:
 tty: true
 
 falcosidekick:
-  enabled: false
+  enabled: true
   webui:
     enabled: true
     replicaCount: 1
@@ -128,4 +139,6 @@ extra:
     - name: AWS_ACCESS_KEY_ID
       value: ""
     - name: AWS_SECRET_ACCESS_KEY
+      value: ""
+    - name: GITHUB_PLUGIN_TOKEN
       value: ""

@@ -53,11 +53,14 @@ module "vpc" {
   version = "5.5.1"
 
   name = "falco-sec"
-  cidr = "10.0.0.0/24"
+  cidr = var.cidr
 
-  azs            = [data.aws_availability_zones.available.names[0]]
-  public_subnets = ["10.0.0.0/24"]
+  azs             = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
+  private_subnets = var.private_subnets
+  public_subnets  = var.public_subnets
 
+  enable_nat_gateway   = true
+  single_nat_gateway   = true
   enable_dns_hostnames = true
 
   enable_flow_log                      = false
@@ -87,16 +90,6 @@ resource "aws_security_group" "ssh_access" {
     to_port   = 80
     protocol  = "tcp"
     description = "HTTP access"
-    cidr_blocks = [
-      "0.0.0.0/0",
-    ]
-  }
-
-  ingress {
-    from_port = 30282
-    to_port   = 30282
-    protocol  = "tcp"
-    description = "Falco sidekick UI"
     cidr_blocks = [
       "0.0.0.0/0",
     ]

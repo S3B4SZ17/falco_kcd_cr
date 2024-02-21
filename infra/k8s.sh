@@ -32,8 +32,16 @@ sudo mv linux-amd64/helm /usr/local/bin/helm
 # Instalar falco
 helm repo add falcosecurity https://falcosecurity.github.io/charts
 helm repo update
+cd falco_kcd_cr
 helm install falco \
   --create-namespace \
   --namespace falco \
   --values=infra/falco-values.yaml \
   falcosecurity/falco
+
+docker run -d \
+  --name nginx \
+  -p 80:80 \
+  -v /home/ec2-user/falco_kcd_cr/infra/nginx/nginx.conf:/etc/nginx/nginx.conf \
+  --network minikube \
+  nginx
