@@ -7,19 +7,15 @@ locals {
 
 }
 
-data "aws_region" "current" {}
-
-data "aws_caller_identity" "current" {}
-
 data "aws_availability_zones" "available" {}
 
 module "key_pair" {
   source  = "terraform-aws-modules/key-pair/aws"
   version = ">= 2.0.0, < 3.0.0"
-  
+
   key_name_prefix    = "minikube"
   create_private_key = true
-  tags = local.tags
+  tags               = local.tags
 }
 
 resource "aws_instance" "ec2_instance" {
@@ -60,14 +56,39 @@ resource "null_resource" "provision-files" {
 
   #Provision falco-values.yaml
   provisioner "file" {
-    source      = templatefile("${path.module}/files/values.yaml", {
-      aws_region          = var.aws_region,
-      aws_access_key      = var.aws_access_key,
-      aws_secret_access_key = var.aws_secret_access_key,
-      github_repos        = var.github_repos,
-      aws_instance_ip     = aws_instance.ec2_instance.public_ip,
-      github_plugin_token = var.github_plugin_token,
-    })
+    content     = <<-EOT
+falco:
+  plugins:
+    - name: k8saudit
+      library_path: libk8saudit.so
+      init_config:
+        ""
+        # maxEventBytes: 1048576
+        # sslCertificate: /etc/falco/falco.pem
+      open_params: "http://:9765/k8s-audit"
+    - name: json
+      library_path: libjson.so
+      init_config: ""
+    - name: cloudtrail
+      library_path: libcloudtrail.so
+      init_config: '{"sqsDelete": true}'
+      open_params: "sqs://falco-sec"
+    - name: github
+      library_path: libgithub.so
+      init_config: '{"websocketServerURL" :"http://${aws_instance.ec2_instance.public_ip}/webhook", "useHTTPs":false}'
+      open_params: '${var.github_repos}'
+
+extra:
+  env:
+    - name: AWS_DEFAULT_REGION
+      value: ${var.aws_region}
+    - name: AWS_ACCESS_KEY_ID
+      value: "${var.aws_access_key}"
+    - name: AWS_SECRET_ACCESS_KEY
+      value: "${var.aws_secret_access_key}"
+    - name: GITHUB_PLUGIN_TOKEN
+      value: "${var.github_plugin_token}"
+    EOT
     destination = "/home/ec2-user/values.yaml"
   }
 
@@ -134,9 +155,9 @@ resource "aws_security_group" "ssh_access" {
 
   #SSH For EC2 provisioner and troubleshooting
   ingress {
-    from_port = 22
-    to_port   = 22
-    protocol  = "tcp"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
     description = "SSH access"
     cidr_blocks = [
       "0.0.0.0/0",
@@ -144,9 +165,9 @@ resource "aws_security_group" "ssh_access" {
   }
 
   ingress {
-    from_port = 80
-    to_port   = 80
-    protocol  = "tcp"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
     description = "HTTP access"
     cidr_blocks = [
       "0.0.0.0/0",

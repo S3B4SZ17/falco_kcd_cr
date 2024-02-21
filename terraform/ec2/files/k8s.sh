@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Wait until the instance is ready
+echo 'Waiting for user data script to finish'
+sudo cloud-init status --wait
+sleep 10
+
 # Pre-configuracion del repositorio con los archivos
 git clone https://github.com/S3B4SZ17/falco_kcd_cr.git
 mkdir -p ~/.minikube/files/etc/ssl/certs
@@ -32,36 +37,36 @@ http {
   server {
     listen       80;
 
-    location /webhook/ {
-      proxy_pass `minikube ip`:30009;
-      proxy_set_header Host $host;
-      proxy_set_header X-Real-IP $remote_addr;
-      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_set_header X-Forwarded-Proto $scheme;
+    location /webhook {
+      proxy_pass http://`minikube ip`:30009;
+      proxy_set_header Host \$host;
+      proxy_set_header X-Real-IP \$remote_addr;
+      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto \$scheme;
 
       # Content-Type
-      proxy_set_header Content-Type $http_content_type;
+      proxy_set_header Content-Type \$http_content_type;
       
       # Add any other headers you need to pass
       # GitHub headers
-      proxy_set_header X-GitHub-Delivery $http_x_github_delivery;
-      proxy_set_header X-GitHub-Event $http_x_github_event;
-      proxy_set_header X-GitHub-Hook-ID $http_x_github_hook_id;
-      proxy_set_header X-GitHub-Hook-Installation-Target-ID $http_x_github_hook_installation_target_id;
-      proxy_set_header X-GitHub-Hook-Installation-Target-Type $http_x_github_hook_installation_target_type;
-      proxy_set_header X-Hub-Signature $http_x_hub_signature;
-      proxy_set_header X-Hub-Signature-256 $http_x_hub_signature_256;
+      proxy_set_header X-GitHub-Delivery \$http_x_github_delivery;
+      proxy_set_header X-GitHub-Event \$http_x_github_event;
+      proxy_set_header X-GitHub-Hook-ID \$http_x_github_hook_id;
+      proxy_set_header X-GitHub-Hook-Installation-Target-ID \$http_x_github_hook_installation_target_id;
+      proxy_set_header X-GitHub-Hook-Installation-Target-Type \$http_x_github_hook_installation_target_type;
+      proxy_set_header X-Hub-Signature \$http_x_hub_signature;
+      proxy_set_header X-Hub-Signature-256 \$http_x_hub_signature_256;
     }
 
     location / {
-      proxy_pass `minikube ip`:30282;
+      proxy_pass http://`minikube ip`:30282;
       
       # Add any other headers you need to pass
       # proxy_set_header Header-Name Header-Value;
     }
   }
 }
-error_log  logs/error.log;
+error_log  /var/log/nginx_error.log;
 EOF
 
 # Crear un cluster kind
@@ -84,3 +89,8 @@ docker run -d \
   -v /home/ec2-user/nginx.conf:/etc/nginx/nginx.conf \
   --network minikube \
   nginx
+
+# Example commands
+# k run -i --tty --rm debug --image=busybox --restart=Never -- sh
+# find / -name ~/.aws/credentials
+# k create cm  myconfigmap --from-literal=username=admin --from-literal=password=123456

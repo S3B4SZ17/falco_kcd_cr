@@ -1,6 +1,6 @@
 module "falcosecurity_for_cloud_aws_single_account" {
-   source = "github.com/falcosecurity/falco-aws-terraform//examples/single-account?ref=main"
-   name   = "falco-sec"
+  source = "github.com/falcosecurity/falco-aws-terraform//examples/single-account?ref=main"
+  name   = var.name
 }
 
 output "cloudtrail_sns_subscribed_sqs_url" {
