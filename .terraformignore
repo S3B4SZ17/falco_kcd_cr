@@ -1,0 +1,18 @@
+.terraform
+.terraform.lock.hcl
+kubectl
+kubeconfig
+kubeconfig.*
+secret.tfvars
+secrets.tfvars
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfstate.*.backup
+*.key
+terraform.tfvars
+terraform.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+
+# Not required for any TF thing (chart testing)
+ct/
