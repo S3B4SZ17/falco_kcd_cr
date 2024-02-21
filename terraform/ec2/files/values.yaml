@@ -1,0 +1,31 @@
+falco:
+  plugins:
+    - name: k8saudit
+      library_path: libk8saudit.so
+      init_config:
+        ""
+        # maxEventBytes: 1048576
+        # sslCertificate: /etc/falco/falco.pem
+      open_params: "http://:9765/k8s-audit"
+    - name: json
+      library_path: libjson.so
+      init_config: ""
+    - name: cloudtrail
+      library_path: libcloudtrail.so
+      init_config: '{"sqsDelete": true}'
+      open_params: "sqs://falco-sec"
+    - name: github
+      library_path: libgithub.so
+      init_config: '{"websocketServerURL" :"http://${aws_instance_ip}/webhook", "useHTTPs":false}'
+      open_params: '${github_repos}'
+
+extra:
+  env:
+    - name: AWS_DEFAULT_REGION
+      value: ${aws_region}
+    - name: AWS_ACCESS_KEY_ID
+      value: "${aws_access_key}"
+    - name: AWS_SECRET_ACCESS_KEY
+      value: "${aws_secret_access_key}"
+    - name: GITHUB_PLUGIN_TOKEN
+      value: "${github_plugin_token}"

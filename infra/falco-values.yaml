@@ -63,25 +63,25 @@ falco:
     - /etc/falco/falco_sandbox_rules.yaml
     - /etc/falco/github.yaml
     - /etc/falco/rules.d
-  plugins:
-    - name: k8saudit
-      library_path: libk8saudit.so
-      init_config:
-        ""
-        # maxEventBytes: 1048576
-        # sslCertificate: /etc/falco/falco.pem
-      open_params: "http://:9765/k8s-audit"
-    - name: json
-      library_path: libjson.so
-      init_config: ""
-    - name: cloudtrail
-      library_path: libcloudtrail.so
-      init_config: '{"sqsDelete": true}'
-      open_params: "sqs://falco-sec"
-    - name: github
-      library_path: libgithub.so
-      init_config: '{"websocketServerURL" :"http://34.218.209.85/webhook", "useHTTPs":false}'
-      open_params: 'S3B4SZ17/falco_kcd_cr'
+  # plugins:
+  #   - name: k8saudit
+  #     library_path: libk8saudit.so
+  #     init_config:
+  #       ""
+  #       # maxEventBytes: 1048576
+  #       # sslCertificate: /etc/falco/falco.pem
+  #     open_params: "http://:9765/k8s-audit"
+  #   - name: json
+  #     library_path: libjson.so
+  #     init_config: ""
+  #   - name: cloudtrail
+  #     library_path: libcloudtrail.so
+  #     init_config: '{"sqsDelete": true}'
+  #     open_params: "sqs://falco-sec"
+  #   - name: github
+  #     library_path: libgithub.so
+  #     init_config: '{"websocketServerURL" :"http://34.218.209.85/webhook", "useHTTPs":false}'
+  #     open_params: 'S3B4SZ17/falco_kcd_cr'
   load_plugins: [k8saudit, cloudtrail, json, github]
   json_output: true
   json_include_output_property: true
@@ -132,13 +132,14 @@ falcosidekick:
       nodePort: 30282
   replicaCount: 1
 
-extra:
-  env:
-    - name: AWS_DEFAULT_REGION
-      value: "us-west-2"
-    - name: AWS_ACCESS_KEY_ID
-      value: ""
-    - name: AWS_SECRET_ACCESS_KEY
-      value: ""
-    - name: GITHUB_PLUGIN_TOKEN
-      value: ""
+# Commented out since merged with terraform in the init provisioning
+# extra:
+#   env:
+#     - name: AWS_DEFAULT_REGION
+#       value: "us-west-2"
+#     - name: AWS_ACCESS_KEY_ID
+#       value: ""
+#     - name: AWS_SECRET_ACCESS_KEY
+#       value: ""
+#     - name: GITHUB_PLUGIN_TOKEN
+#       value: ""
