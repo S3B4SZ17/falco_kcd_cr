@@ -83,6 +83,11 @@ helm install falco \
   --values=falco_kcd_cr/infra/falco-values.yaml \
   falcosecurity/falco
 
+# Se espera a que falco este listo
+sleep 60
+
+# Se configura un nginx reverse proxy
+
 docker run -d \
   --name nginx \
   -p 80:80 \
@@ -91,6 +96,9 @@ docker run -d \
   nginx
 
 # Example commands
-# k run -i --tty --rm debug --image=busybox --restart=Never -- sh
+# k run -i --tty --rm debug --image=nicolaka/netshoot --restart=Never -- sh
 # find / -name ~/.aws/credentials
 # k create cm  myconfigmap --from-literal=username=admin --from-literal=password=123456
+
+# Install sysdig cli
+# apt update -y; apt install sysdig -y

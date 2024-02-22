@@ -9,6 +9,7 @@ locals {
 
 data "aws_availability_zones" "available" {}
 
+
 module "key_pair" {
   source  = "terraform-aws-modules/key-pair/aws"
   version = ">= 2.0.0, < 3.0.0"
