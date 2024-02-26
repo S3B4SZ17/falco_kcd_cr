@@ -102,3 +102,4 @@ docker run -d \
 
 # Install sysdig cli
 # apt update -y; apt install sysdig -y
+# apt install bpftool; bpftool prog list
